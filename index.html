@@ -287,6 +287,15 @@
       color: var(--text-primary);
     }
 
+    .btn-danger {
+      background: #E57373;
+      color: #FFF;
+    }
+
+    .btn-danger:hover {
+      background: #EF5350;
+    }
+
     /* 결제 안내 */
     .payment-guide {
       background: rgba(196, 167, 125, 0.15);
@@ -542,7 +551,10 @@
     <div class="modal">
       <img id="viewImage" src="" alt="작품">
       <p class="artist-name" id="viewArtist"></p>
-      <button class="btn btn-secondary" onclick="closeViewModal()">닫기</button>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="closeViewModal()">닫기</button>
+        <button class="btn btn-danger" id="deleteBtn" style="display: none;" onclick="confirmDelete()">삭제</button>
+      </div>
     </div>
   </div>
 
@@ -784,8 +796,12 @@
       }
       
       panel.classList.add('active');
-      list.innerHTML = pendingRequests.map(req => `
-        <li class="pending-item">
+      list.innerHTML = '';
+      
+      pendingRequests.forEach(req => {
+        const item = document.createElement('li');
+        item.className = 'pending-item';
+        item.innerHTML = `
           <img src="${req.image}" alt="${req.name}">
           <div class="info">
             <div class="name">${req.name}</div>
@@ -795,14 +811,19 @@
             <button class="btn-approve" onclick="approveRequest(${req.id})">승인</button>
             <button class="btn-reject" onclick="rejectRequest(${req.id})">거절</button>
           </div>
-        </li>
-      `).join('');
+        `;
+        list.appendChild(item);
+      });
     }
 
     // 승인
     function approveRequest(id) {
+      console.log('Approving request:', id);
       const request = pendingRequests.find(r => r.id === id);
-      if (!request) return;
+      if (!request) {
+        console.log('Request not found');
+        return;
+      }
       
       request.pixels.forEach(i => {
         pixels[i] = {
@@ -814,17 +835,33 @@
       pendingRequests = pendingRequests.filter(r => r.id !== id);
       saveData();
       initGrid();
+      alert('승인되었습니다!');
     }
 
     // 거절
     function rejectRequest(id) {
+      console.log('Rejecting request:', id);
       pendingRequests = pendingRequests.filter(r => r.id !== id);
       saveData();
       initGrid();
+      alert('거절되었습니다.');
+    }
+
+    // 이미지 삭제 (관리자)
+    function deletePixel(index) {
+      if (confirm('이 이미지를 삭제하시겠습니까?')) {
+        delete pixels[index];
+        saveData();
+        initGrid();
+        closeViewModal();
+      }
     }
 
     // 보기 모달
+    let currentViewIndex = null;
+    
     function showViewModal(index) {
+      currentViewIndex = index;
       let pixelData = pixels[index];
       
       if (!pixelData) {
@@ -835,12 +872,31 @@
       if (pixelData) {
         document.getElementById('viewImage').src = pixelData.image;
         document.getElementById('viewArtist').textContent = `by ${pixelData.name}`;
+        
+        // 관리자 로그인 시 삭제 버튼 표시
+        const deleteBtn = document.getElementById('deleteBtn');
+        if (isAdminLoggedIn) {
+          deleteBtn.style.display = 'block';
+        } else {
+          deleteBtn.style.display = 'none';
+        }
+        
         document.getElementById('viewModal').classList.add('active');
+      }
+    }
+
+    function confirmDelete() {
+      if (currentViewIndex !== null && confirm('이 이미지를 삭제하시겠습니까?')) {
+        delete pixels[currentViewIndex];
+        saveData();
+        initGrid();
+        closeViewModal();
       }
     }
 
     function closeViewModal() {
       document.getElementById('viewModal').classList.remove('active');
+      currentViewIndex = null;
     }
 
     // 통계 업데이트
