@@ -16,7 +16,586 @@
 
     :root {<!DOCTYPE html>
 <html lang="ko">
+<head><!DOCTYPE html>
+<html lang="ko">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>낙서장 - Graffiti Wall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --wall-bg: #F5F0E6;
+      --wall-dark: #E8E0D0;
+      --grid-line: #D4C9B8;
+      --text-primary: #4A4035;
+      --text-secondary: #7A6F63;
+      --accent: #C4A77D;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #2C2823;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-family: 'Caveat', cursive;
+      font-size: 64px;
+      color: var(--wall-bg);
+      margin-bottom: 10px;
+      text-shadow: 3px 3px 0 var(--accent);
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .price-info {
+      color: var(--accent);
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .wall-container {
+      background: var(--wall-bg);
+      width: 1000px;
+      height: 1000px;
+      margin: 0 auto;
+      position: relative;
+      box-shadow: 
+        0 0 0 20px #3D352C,
+        0 0 0 24px #2C2823,
+        0 20px 60px rgba(0,0,0,0.5);
+      /* 벽면 텍스처 */
+      background-image: 
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 2px,
+          rgba(180, 160, 140, 0.03) 2px,
+          rgba(180, 160, 140, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(180, 160, 140, 0.03) 2px,
+          rgba(180, 160, 140, 0.03) 4px
+        ),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+      cursor: crosshair;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(100, 10px);
+      grid-template-rows: repeat(100, 10px);
+      width: 1000px;
+      height: 1000px;
+    }
+
+    .pixel {
+      width: 10px;
+      height: 10px;
+      background: var(--wall-bg);
+      border: 0.5px solid var(--grid-line);
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .pixel:hover {
+      z-index: 10;
+      box-shadow: 
+        0 0 0 2px var(--accent),
+        0 0 10px rgba(196, 167, 125, 0.5);
+      transform: scale(1.1);
+    }
+
+    .pixel.sold {
+      border: none;
+    }
+
+    .pixel.sold:hover {
+      transform: scale(1.15);
+    }
+
+    .pixel.sold img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* 모달 스타일 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--wall-bg);
+      padding: 40px;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .modal h2 {
+      font-family: 'Caveat', cursive;
+      font-size: 36px;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    .modal p {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--grid-line);
+      border-radius: 8px;
+      font-size: 16px;
+      background: #FFF;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .price-tag {
+      font-size: 24px;
+      color: var(--accent);
+      font-weight: 700;
+      text-align: center;
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(196, 167, 125, 0.1);
+      border-radius: 8px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #FFF;
+    }
+
+    .btn-primary:hover {
+      background: #B3956C;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--wall-dark);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--grid-line);
+    }
+
+    /* 보기 모달 */
+    .view-modal .modal {
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .view-modal img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .view-modal .artist-name {
+      font-family: 'Caveat', cursive;
+      font-size: 28px;
+      color: var(--text-primary);
+    }
+
+    /* 결제 안내 */
+    .payment-guide {
+      background: rgba(196, 167, 125, 0.15);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .payment-guide .bank {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .payment-guide .account {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 1px;
+    }
+
+    .payment-guide .amount {
+      font-size: 18px;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+
+    /* 통계 */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+      color: var(--wall-bg);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    @media (max-width: 1050px) {
+      .wall-container, .grid {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+      }
+      
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(100, 1fr);
+        grid-template-rows: repeat(100, 1fr);
+      }
+      
+      .pixel {
+        border: 0.3px solid var(--grid-line);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>낙서장</h1>
+      <p class="subtitle">인터넷에 영구적으로 추억을 남겨보세요!</p>
+      <p class="price-info">📍 10×10 픽셀 = ₩1,000</p>
+    </header>
+
+    <div class="wall-container">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="soldCount">0</div>
+        <div class="stat-label">판매된 픽셀</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="totalPixels">10,000</div>
+        <div class="stat-label">총 픽셀</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="totalRevenue">₩0</div>
+        <div class="stat-label">총 수익</div>
+      </div>
+    </div>
+
+    <footer>
+      <p>클릭하여 낙서를 남기세요 🎨</p>
+    </footer>
+  </div>
+
+  <!-- 업로드 모달 -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <h2>🎨 낙서하기</h2>
+      <p>이곳에 당신의 그림을 남겨보세요!</p>
+      <div class="form-group">
+        <label for="artistName">이름 (또는 닉네임)</label>
+        <input type="text" id="artistName" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label for="artworkFile">이미지 파일</label>
+        <input type="file" id="artworkFile" accept="image/*">
+      </div>
+      <div class="price-tag">💰 ₩1,000</div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="closeUploadModal()">취소</button>
+        <button class="btn btn-primary" onclick="purchasePixel()">구매하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 보기 모달 -->
+  <div class="modal-overlay view-modal" id="viewModal">
+    <div class="modal">
+      <img id="viewImage" src="" alt="작품">
+      <p class="artist-name" id="viewArtist"></p>
+      <button class="btn btn-secondary" onclick="closeViewModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 결제 안내 모달 -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+      <h2>💳 결제 안내</h2>
+      <div class="payment-guide">
+        <p class="bank">카카오뱅크</p>
+        <p class="account">3333-3552-76213</p>
+        <p class="amount">₩1,000</p>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+        입금 완료 후 확인 버튼을 눌러주세요
+      </p>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="closePaymentModal()">취소</button>
+        <button class="btn btn-primary" onclick="confirmPurchase()">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GRID_SIZE = 100;
+    const PRICE_PER_PIXEL = 1000;
+    let selectedPixelIndex = null;
+    let pixels = [];
+
+    // 로컬 스토리지에서 데이터 로드
+    function loadPixels() {
+      const saved = localStorage.getItem('graffitiPixels');
+      if (saved) {
+        pixels = JSON.parse(saved);
+      }
+    }
+
+    // 로컬 스토리지에 데이터 저장
+    function savePixels() {
+      localStorage.setItem('graffitiPixels', JSON.stringify(pixels));
+    }
+
+    // 그리드 초기화
+    function initGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        const pixel = document.createElement('div');
+        pixel.className = 'pixel';
+        pixel.dataset.index = i;
+        
+        // 판매된 픽셀 표시
+        if (pixels[i]) {
+          pixel.classList.add('sold');
+          const img = document.createElement('img');
+          img.src = pixels[i].image;
+          img.alt = pixels[i].name;
+          pixel.appendChild(img);
+        }
+        
+        pixel.addEventListener('click', () => handlePixelClick(i));
+        grid.appendChild(pixel);
+      }
+      
+      updateStats();
+    }
+
+    // 픽셀 클릭 처리
+    function handlePixelClick(index) {
+      if (pixels[index]) {
+        // 판매된 이미지 보기
+        showViewModal(index);
+      } else {
+        // 빈 픽셀 - 구매 모달
+        selectedPixelIndex = index;
+        openUploadModal();
+      }
+    }
+
+    // 업로드 모달 열기
+    function openUploadModal() {
+      document.getElementById('uploadModal').classList.add('active');
+      document.getElementById('artistName').value = '';
+      document.getElementById('artworkFile').value = '';
+    }
+
+    // 업로드 모달 닫기
+    function closeUploadModal() {
+      document.getElementById('uploadModal').classList.remove('active');
+      selectedPixelIndex = null;
+    }
+
+    // 보기 모달 열기
+    function showViewModal(index) {
+      const pixel = pixels[index];
+      document.getElementById('viewImage').src = pixel.image;
+      document.getElementById('viewArtist').textContent = `by ${pixel.name}`;
+      document.getElementById('viewModal').classList.add('active');
+    }
+
+    // 보기 모달 닫기
+    function closeViewModal() {
+      document.getElementById('viewModal').classList.remove('active');
+    }
+
+    // 픽셀 구매 - 결제 안내 먼저 표시
+    function purchasePixel() {
+      const name = document.getElementById('artistName').value.trim();
+      const fileInput = document.getElementById('artworkFile');
+      
+      if (!name) {
+        alert('이름을 입력해주세요!');
+        return;
+      }
+      
+      if (!fileInput.files[0]) {
+        alert('이미지를 선택해주세요!');
+        return;
+      }
+
+      // 결제 안내 모달 열기
+      document.getElementById('uploadModal').classList.remove('active');
+      document.getElementById('paymentModal').classList.add('active');
+    }
+
+    // 결제 모달 닫기
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.remove('active');
+      document.getElementById('uploadModal').classList.add('active');
+    }
+
+    // 구매 확정
+    function confirmPurchase() {
+      const fileInput = document.getElementById('artworkFile');
+      const name = document.getElementById('artistName').value.trim();
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        pixels[selectedPixelIndex] = {
+          name: name,
+          image: e.target.result,
+          timestamp: Date.now()
+        };
+        
+        savePixels();
+        initGrid();
+        closePaymentModal();
+      };
+      
+      reader.readAsDataURL(file);
+    }
+
+    // 통계 업데이트
+    function updateStats() {
+      const soldCount = pixels.filter(p => p).length;
+      document.getElementById('soldCount').textContent = soldCount;
+      document.getElementById('totalRevenue').textContent = `₩${(soldCount * PRICE_PER_PIXEL).toLocaleString()}`;
+    }
+
+    // 초기화
+    loadPixels();
+    initGrid();
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+      if (e.target === this) closeUploadModal();
+    });
+
+    document.getElementById('viewModal').addEventListener('click', function(e) {
+      if (e.target === this) closeViewModal();
+    });
+
+    document.getElementById('paymentModal').addEventListener('click', function(e) {
+      if (e.target === this) closePaymentModal();
+    });
+  </script>
+</body>
+</html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>낙서장 - Graffiti Wall</title>
