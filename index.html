@@ -682,7 +682,11 @@
         if (isAreaEmpty(selectedPixels)) {
           openUploadModal();
         } else {
-          alert('이미 사용 중인 영역입니다!');
+          // 이미 사용 중인 영역이면 첫 번째 픽셀의 이미지 보기
+          const firstIndex = selectedPixels.find(i => pixels[i] || pendingRequests.some(p => p.pixels.includes(i)));
+          if (firstIndex !== undefined) {
+            showViewModal(firstIndex);
+          }
         }
       }
       isSelecting = false;
