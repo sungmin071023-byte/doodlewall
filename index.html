@@ -270,13 +270,13 @@
 
     /* 보기 모달 */
     .view-modal .modal {
-      max-width: 600px;
+      max-width: 800px;
       text-align: center;
     }
 
     .view-modal img {
       max-width: 100%;
-      max-height: 400px;
+      max-height: 70vh;
       border-radius: 8px;
       margin-bottom: 20px;
     }
@@ -525,6 +525,7 @@
         <p class="bank">카카오뱅크</p>
         <p class="account">3333-3552-76213</p>
         <p class="amount" id="paymentAmount">₩1,000</p>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">※ 입금 시 실명으로 보내주세요</p>
       </div>
       <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
         입금 후 관리자가 확인하면 이미지가 표시됩니다
@@ -587,6 +588,10 @@
           img.src = pixels[i].image;
           img.alt = pixels[i].name;
           pixel.appendChild(img);
+          pixel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showViewModal(i);
+          });
         }
         
         // 대기중인 픽셀 표시
@@ -597,6 +602,10 @@
           img.src = pending.image;
           img.alt = pending.name;
           pixel.appendChild(img);
+          pixel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showViewModal(i);
+          });
         }
         
         grid.appendChild(pixel);
@@ -762,6 +771,12 @@
     function renderPendingList() {
       const list = document.getElementById('pendingList');
       const panel = document.getElementById('adminPanel');
+      
+      // 관리자 로그인 상태가 아니면 패널 표시 안 함
+      if (!isAdminLoggedIn) {
+        panel.classList.remove('active');
+        return;
+      }
       
       if (pendingRequests.length === 0) {
         panel.classList.remove('active');
