@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>낙서장 - Graffiti Wall</title>
+  <title>낙서장 - Doodle Wall</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -22,6 +21,8 @@
       --text-primary: #4A4035;
       --text-secondary: #7A6F63;
       --accent: #C4A77D;
+      --pending: #E8A87C;
+      --approved: #7BC47F;
     }
 
     body {
@@ -71,24 +72,12 @@
         0 0 0 20px #3D352C,
         0 0 0 24px #2C2823,
         0 20px 60px rgba(0,0,0,0.5);
-      /* 벽면 텍스처 */
       background-image: 
-        repeating-linear-gradient(
-          90deg,
-          transparent,
-          transparent 2px,
-          rgba(180, 160, 140, 0.03) 2px,
-          rgba(180, 160, 140, 0.03) 4px
-        ),
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 2px,
-          rgba(180, 160, 140, 0.03) 2px,
-          rgba(180, 160, 140, 0.03) 4px
-        ),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(180, 160, 140, 0.03) 2px, rgba(180, 160, 140, 0.03) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(180, 160, 140, 0.03) 2px, rgba(180, 160, 140, 0.03) 4px),
         url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
       cursor: crosshair;
+      user-select: none;
     }
 
     .grid {
@@ -110,25 +99,41 @@
 
     .pixel:hover {
       z-index: 10;
-      box-shadow: 
-        0 0 0 2px var(--accent),
-        0 0 10px rgba(196, 167, 125, 0.5);
+      box-shadow: 0 0 0 2px var(--accent), 0 0 10px rgba(196, 167, 125, 0.5);
       transform: scale(1.1);
     }
 
-    .pixel.sold {
+    .pixel.selected {
+      background: rgba(196, 167, 125, 0.3);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .pixel.sold, .pixel.pending {
       border: none;
     }
 
-    .pixel.sold:hover {
+    .pixel.sold:hover, .pixel.pending:hover {
       transform: scale(1.15);
     }
 
-    .pixel.sold img {
+    .pixel.sold img, .pixel.pending img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+    }
+
+    .pixel.pending {
+      opacity: 0.6;
+    }
+
+    .pixel.pending::after {
+      content: '⏳';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8px;
     }
 
     /* 모달 스타일 */
@@ -195,6 +200,26 @@
     .form-group input:focus {
       outline: none;
       border-color: var(--accent);
+    }
+
+    .selection-info {
+      background: rgba(196, 167, 125, 0.15);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .selection-info .size {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .selection-info .price {
+      font-size: 18px;
+      color: var(--accent);
+      margin-top: 5px;
     }
 
     .price-tag {
@@ -321,6 +346,100 @@
       font-size: 14px;
     }
 
+    /* 관리자 패널 */
+    .admin-panel {
+      display: none;
+      background: var(--wall-bg);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 30px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .admin-panel.active {
+      display: block;
+    }
+
+    .admin-panel h3 {
+      font-family: 'Caveat', cursive;
+      font-size: 28px;
+      color: var(--text-primary);
+      margin-bottom: 15px;
+    }
+
+    .pending-list {
+      list-style: none;
+    }
+
+    .pending-item {
+      background: var(--wall-dark);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .pending-item img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .pending-item .info {
+      flex: 1;
+    }
+
+    .pending-item .name {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .pending-item .area {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .pending-item .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pending-item .btn-approve {
+      background: var(--approved);
+      color: #FFF;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .pending-item .btn-reject {
+      background: #E57373;
+      color: #FFF;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .no-pending {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 20px;
+    }
+
+    /* 도움말 */
+    .help-text {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
     @media (max-width: 1050px) {
       .wall-container, .grid {
         width: 100%;
@@ -348,7 +467,7 @@
       <p class="price-info">📍 10×10 픽셀 = ₩1,000</p>
     </header>
 
-    <div class="wall-container">
+    <div class="wall-container" id="wallContainer">
       <div class="grid" id="grid"></div>
     </div>
 
@@ -367,8 +486,22 @@
       </div>
     </div>
 
+    <p class="help-text">💡 드래그하여 여러 픽셀을 선택할 수 있습니다</p>
+
+    <!-- 관리자 로그인 버튼 -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button class="btn btn-secondary" style="max-width: 200px;" onclick="showAdminLogin()">🔐 관리자</button>
+    </div>
+
+    <!-- 관리자 패널 -->
+    <div class="admin-panel" id="adminPanel">
+      <h3>📋 승인 대기 목록</h3>
+      <ul class="pending-list" id="pendingList"></ul>
+      <button class="btn btn-secondary" style="margin-top: 15px;" onclick="logoutAdmin()">로그아웃</button>
+    </div>
+
     <footer>
-      <p>클릭하여 낙서를 남기세요 🎨</p>
+      <p>클릭 또는 드래그하여 낙서를 남기세요 🎨</p>
     </footer>
   </div>
 
@@ -376,7 +509,10 @@
   <div class="modal-overlay" id="uploadModal">
     <div class="modal">
       <h2>🎨 낙서하기</h2>
-      <p>이곳에 당신의 그림을 남겨보세요!</p>
+      <div class="selection-info">
+        <div class="size" id="selectionSize">선택 영역: 1×1 (1개)</div>
+        <div class="price" id="selectionPrice">₩1,000</div>
+      </div>
       <div class="form-group">
         <label for="artistName">이름 (또는 닉네임)</label>
         <input type="text" id="artistName" placeholder="홍길동">
@@ -385,10 +521,17 @@
         <label for="artworkFile">이미지 파일</label>
         <input type="file" id="artworkFile" accept="image/*">
       </div>
-      <div class="price-tag">💰 ₩1,000</div>
+      <div class="payment-guide">
+        <p class="bank">카카오뱅크</p>
+        <p class="account">3333-3552-76213</p>
+        <p class="amount" id="paymentAmount">₩1,000</p>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+        입금 후 관리자가 확인하면 이미지가 표시됩니다
+      </p>
       <div class="btn-group">
         <button class="btn btn-secondary" onclick="closeUploadModal()">취소</button>
-        <button class="btn btn-primary" onclick="purchasePixel()">구매하기</button>
+        <button class="btn btn-primary" onclick="submitForApproval()">구매 요청</button>
       </div>
     </div>
   </div>
@@ -402,42 +545,29 @@
     </div>
   </div>
 
-  <!-- 결제 안내 모달 -->
-  <div class="modal-overlay" id="paymentModal">
-    <div class="modal">
-      <h2>💳 결제 안내</h2>
-      <div class="payment-guide">
-        <p class="bank">카카오뱅크</p>
-        <p class="account">3333-3552-76213</p>
-        <p class="amount">₩1,000</p>
-      </div>
-      <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
-        입금 완료 후 확인 버튼을 눌러주세요
-      </p>
-      <div class="btn-group">
-        <button class="btn btn-secondary" onclick="closePaymentModal()">취소</button>
-        <button class="btn btn-primary" onclick="confirmPurchase()">확인</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     const GRID_SIZE = 100;
     const PRICE_PER_PIXEL = 1000;
-    let selectedPixelIndex = null;
+    const ADMIN_PASSWORD = 'whtjdals76!!';
+    let selectedPixels = [];
+    let isSelecting = false;
+    let selectionStart = null;
     let pixels = [];
+    let pendingRequests = [];
+    let isAdminLoggedIn = false;
 
     // 로컬 스토리지에서 데이터 로드
-    function loadPixels() {
-      const saved = localStorage.getItem('graffitiPixels');
-      if (saved) {
-        pixels = JSON.parse(saved);
-      }
+    function loadData() {
+      const savedPixels = localStorage.getItem('doodlewallPixels');
+      const savedPending = localStorage.getItem('doodlewallPending');
+      if (savedPixels) pixels = JSON.parse(savedPixels);
+      if (savedPending) pendingRequests = JSON.parse(savedPending);
     }
 
     // 로컬 스토리지에 데이터 저장
-    function savePixels() {
-      localStorage.setItem('graffitiPixels', JSON.stringify(pixels));
+    function saveData() {
+      localStorage.setItem('doodlewallPixels', JSON.stringify(pixels));
+      localStorage.setItem('doodlewallPending', JSON.stringify(pendingRequests));
     }
 
     // 그리드 초기화
@@ -459,27 +589,125 @@
           pixel.appendChild(img);
         }
         
-        pixel.addEventListener('click', () => handlePixelClick(i));
+        // 대기중인 픽셀 표시
+        else if (pendingRequests.some(p => p.pixels.includes(i))) {
+          const pending = pendingRequests.find(p => p.pixels.includes(i));
+          pixel.classList.add('pending');
+          const img = document.createElement('img');
+          img.src = pending.image;
+          img.alt = pending.name;
+          pixel.appendChild(img);
+        }
+        
         grid.appendChild(pixel);
       }
       
       updateStats();
+      renderPendingList();
     }
 
-    // 픽셀 클릭 처리
-    function handlePixelClick(index) {
-      if (pixels[index]) {
-        // 판매된 이미지 보기
-        showViewModal(index);
-      } else {
-        // 빈 픽셀 - 구매 모달
-        selectedPixelIndex = index;
-        openUploadModal();
+    // 선택 영역 계산
+    function getSelectionRect(start, end) {
+      const minX = Math.min(start.x, end.x);
+      const maxX = Math.max(start.x, end.x);
+      const minY = Math.min(start.y, end.y);
+      const maxY = Math.max(start.y, end.y);
+      return { minX, maxX, minY, maxY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    }
+
+    // 픽셀 인덱스 구하기
+    function getPixelIndex(x, y) {
+      return y * GRID_SIZE + x;
+    }
+
+    // 선택 영역의 픽셀 인덱스 배열
+    function getSelectedPixelIndices(rect) {
+      const indices = [];
+      for (let y = rect.minY; y <= rect.maxY; y++) {
+        for (let x = rect.minX; x <= rect.maxX; x++) {
+          indices.push(getPixelIndex(x, y));
+        }
       }
+      return indices;
+    }
+
+    // 선택 영역이 비어있는지 확인
+    function isAreaEmpty(indices) {
+      return indices.every(i => !pixels[i] && !pendingRequests.some(p => p.pixels.includes(i)));
+    }
+
+    // 마우스 이벤트
+    const wallContainer = document.getElementById('wallContainer');
+    const grid = document.getElementById('grid');
+
+    wallContainer.addEventListener('mousedown', (e) => {
+      const rect = grid.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / (rect.width / GRID_SIZE));
+      const y = Math.floor((e.clientY - rect.top) / (rect.height / GRID_SIZE));
+      
+      if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+        isSelecting = true;
+        selectionStart = { x, y };
+        selectedPixels = [getPixelIndex(x, y)];
+        updateSelection();
+      }
+    });
+
+    wallContainer.addEventListener('mousemove', (e) => {
+      if (!isSelecting || !selectionStart) return;
+      
+      const rect = grid.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / (rect.width / GRID_SIZE));
+      const y = Math.floor((e.clientY - rect.top) / (rect.height / GRID_SIZE));
+      
+      const clampedX = Math.max(0, Math.min(GRID_SIZE - 1, x));
+      const clampedY = Math.max(0, Math.min(GRID_SIZE - 1, y));
+      
+      const selRect = getSelectionRect(selectionStart, { x: clampedX, y: clampedY });
+      selectedPixels = getSelectedPixelIndices(selRect);
+      updateSelection();
+    });
+
+    wallContainer.addEventListener('mouseup', () => {
+      if (isSelecting && selectedPixels.length > 0) {
+        if (isAreaEmpty(selectedPixels)) {
+          openUploadModal();
+        } else {
+          alert('이미 사용 중인 영역입니다!');
+        }
+      }
+      isSelecting = false;
+      selectionStart = null;
+      clearSelection();
+    });
+
+    function updateSelection() {
+      clearSelection();
+      selectedPixels.forEach(i => {
+        grid.children[i].classList.add('selected');
+      });
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.pixel.selected').forEach(p => p.classList.remove('selected'));
     }
 
     // 업로드 모달 열기
     function openUploadModal() {
+      const rect = getSelectionRect(
+        { x: selectedPixels[0] % GRID_SIZE, y: Math.floor(selectedPixels[0] / GRID_SIZE) },
+        { x: selectedPixels[selectedPixels.length - 1] % GRID_SIZE, y: Math.floor(selectedPixels[selectedPixels.length - 1] / GRID_SIZE) }
+      );
+      
+      const width = rect.maxX - rect.minX + 1;
+      const height = rect.maxY - rect.minY + 1;
+      const count = selectedPixels.length;
+      const price = count * PRICE_PER_PIXEL;
+      
+      document.getElementById('selectionSize').textContent = `선택 영역: ${width}×${height} (${count}개)`;
+      document.getElementById('selectionPrice').textContent = `₩${price.toLocaleString()}`;
+      document.getElementById('paymentAmount').textContent = `₩${price.toLocaleString()}`;
+      
       document.getElementById('uploadModal').classList.add('active');
       document.getElementById('artistName').value = '';
       document.getElementById('artworkFile').value = '';
@@ -488,24 +716,12 @@
     // 업로드 모달 닫기
     function closeUploadModal() {
       document.getElementById('uploadModal').classList.remove('active');
-      selectedPixelIndex = null;
+      selectedPixels = [];
+      clearSelection();
     }
 
-    // 보기 모달 열기
-    function showViewModal(index) {
-      const pixel = pixels[index];
-      document.getElementById('viewImage').src = pixel.image;
-      document.getElementById('viewArtist').textContent = `by ${pixel.name}`;
-      document.getElementById('viewModal').classList.add('active');
-    }
-
-    // 보기 모달 닫기
-    function closeViewModal() {
-      document.getElementById('viewModal').classList.remove('active');
-    }
-
-    // 픽셀 구매 - 결제 안내 먼저 표시
-    function purchasePixel() {
+    // 승인 요청 제출
+    function submitForApproval() {
       const name = document.getElementById('artistName').value.trim();
       const fileInput = document.getElementById('artworkFile');
       
@@ -519,38 +735,97 @@
         return;
       }
 
-      // 결제 안내 모달 열기
-      document.getElementById('uploadModal').classList.remove('active');
-      document.getElementById('paymentModal').classList.add('active');
-    }
-
-    // 결제 모달 닫기
-    function closePaymentModal() {
-      document.getElementById('paymentModal').classList.remove('active');
-      document.getElementById('uploadModal').classList.add('active');
-    }
-
-    // 구매 확정
-    function confirmPurchase() {
-      const fileInput = document.getElementById('artworkFile');
-      const name = document.getElementById('artistName').value.trim();
-      
       const file = fileInput.files[0];
       const reader = new FileReader();
       
       reader.onload = function(e) {
-        pixels[selectedPixelIndex] = {
+        const request = {
+          id: Date.now(),
           name: name,
           image: e.target.result,
+          pixels: [...selectedPixels],
           timestamp: Date.now()
         };
         
-        savePixels();
+        pendingRequests.push(request);
+        saveData();
         initGrid();
-        closePaymentModal();
+        closeUploadModal();
+        
+        alert('구매 요청이 제출되었습니다!\n관리자가 승인하면 이미지가 표시됩니다.');
       };
       
       reader.readAsDataURL(file);
+    }
+
+    // 대기 목록 렌더링
+    function renderPendingList() {
+      const list = document.getElementById('pendingList');
+      const panel = document.getElementById('adminPanel');
+      
+      if (pendingRequests.length === 0) {
+        panel.classList.remove('active');
+        return;
+      }
+      
+      panel.classList.add('active');
+      list.innerHTML = pendingRequests.map(req => `
+        <li class="pending-item">
+          <img src="${req.image}" alt="${req.name}">
+          <div class="info">
+            <div class="name">${req.name}</div>
+            <div class="area">${req.pixels.length}개 픽셀 (₩${(req.pixels.length * PRICE_PER_PIXEL).toLocaleString()})</div>
+          </div>
+          <div class="actions">
+            <button class="btn-approve" onclick="approveRequest(${req.id})">승인</button>
+            <button class="btn-reject" onclick="rejectRequest(${req.id})">거절</button>
+          </div>
+        </li>
+      `).join('');
+    }
+
+    // 승인
+    function approveRequest(id) {
+      const request = pendingRequests.find(r => r.id === id);
+      if (!request) return;
+      
+      request.pixels.forEach(i => {
+        pixels[i] = {
+          name: request.name,
+          image: request.image
+        };
+      });
+      
+      pendingRequests = pendingRequests.filter(r => r.id !== id);
+      saveData();
+      initGrid();
+    }
+
+    // 거절
+    function rejectRequest(id) {
+      pendingRequests = pendingRequests.filter(r => r.id !== id);
+      saveData();
+      initGrid();
+    }
+
+    // 보기 모달
+    function showViewModal(index) {
+      let pixelData = pixels[index];
+      
+      if (!pixelData) {
+        const pending = pendingRequests.find(p => p.pixels.includes(index));
+        if (pending) pixelData = pending;
+      }
+      
+      if (pixelData) {
+        document.getElementById('viewImage').src = pixelData.image;
+        document.getElementById('viewArtist').textContent = `by ${pixelData.name}`;
+        document.getElementById('viewModal').classList.add('active');
+      }
+    }
+
+    function closeViewModal() {
+      document.getElementById('viewModal').classList.remove('active');
     }
 
     // 통계 업데이트
@@ -561,8 +836,27 @@
     }
 
     // 초기화
-    loadPixels();
+    loadData();
     initGrid();
+
+    // 관리자 로그인
+    function showAdminLogin() {
+      const password = prompt('관리자 비밀번호를 입력하세요:');
+      if (password === ADMIN_PASSWORD) {
+        isAdminLoggedIn = true;
+        document.getElementById('adminPanel').classList.add('active');
+        alert('관리자 모드로 로그인되었습니다.');
+      } else if (password !== null) {
+        alert('비밀번호가 틀렸습니다.');
+      }
+    }
+
+    // 관리자 로그아웃
+    function logoutAdmin() {
+      isAdminLoggedIn = false;
+      document.getElementById('adminPanel').classList.remove('active');
+      alert('로그아웃되었습니다.');
+    }
 
     // 모달 외부 클릭 시 닫기
     document.getElementById('uploadModal').addEventListener('click', function(e) {
@@ -571,10 +865,6 @@
 
     document.getElementById('viewModal').addEventListener('click', function(e) {
       if (e.target === this) closeViewModal();
-    });
-
-    document.getElementById('paymentModal').addEventListener('click', function(e) {
-      if (e.target === this) closePaymentModal();
     });
   </script>
 </body>
