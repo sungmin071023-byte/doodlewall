@@ -594,7 +594,7 @@
           });
         }
         
-        // 대기중인 픽셀 표시
+        // 대기중인 픽셀 표시 (클릭 이벤트 없음 - 승인 전에는 볼 수 없음)
         else if (pendingRequests.some(p => p.pixels.includes(i))) {
           const pending = pendingRequests.find(p => p.pixels.includes(i));
           pixel.classList.add('pending');
@@ -602,10 +602,6 @@
           img.src = pending.image;
           img.alt = pending.name;
           pixel.appendChild(img);
-          pixel.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showViewModal(i);
-          });
         }
         
         grid.appendChild(pixel);
@@ -864,6 +860,7 @@
       if (password === ADMIN_PASSWORD) {
         isAdminLoggedIn = true;
         document.getElementById('adminPanel').classList.add('active');
+        renderPendingList(); // 목록 새로고침
         alert('관리자 모드로 로그인되었습니다.');
       } else if (password !== null) {
         alert('비밀번호가 틀렸습니다.');
